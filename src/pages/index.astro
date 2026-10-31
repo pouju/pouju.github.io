@@ -1,0 +1,336 @@
+---
+import { Image } from 'astro:assets';
+import { getCollection, render } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import Section from '../components/Section.astro';
+import { profile, work, skills, education, outsideWork } from '../data/profile';
+import profilePhoto from '../assets/profile-photo.jpg';
+import aboutPhoto from '../assets/about-me.jpg';
+
+const projects = (await getCollection('projects')).sort((a, b) => a.data.order - b.data.order);
+const renderedProjects = await Promise.all(
+  projects.map(async (project) => ({ ...project, Content: (await render(project)).Content })),
+);
+const year = new Date().getFullYear();
+---
+
+<Base
+  title={`${profile.name} · Full-stack engineer`}
+  description={`${profile.name} is a full-stack engineer at Reaktor, building and running web applications for clients.`}
+>
+  <main>
+    <header class="intro">
+      <Image
+        src={profilePhoto}
+        alt={`Portrait of ${profile.name}`}
+        width={480}
+        widths={[160, 320, 480]}
+        sizes="10rem"
+        class="portrait"
+        loading="eager"
+      />
+      <div>
+        <h1>{profile.name}</h1>
+        <p class="title">{profile.title}</p>
+        <div class="intro-text">
+          {profile.intro.map((paragraph) => <p>{paragraph}</p>)}
+        </div>
+        <ul class="links">
+          {profile.links.map((link) => <li><a href={link.url}>{link.label}</a></li>)}
+        </ul>
+      </div>
+    </header>
+
+    <Section id="work" title="Work">
+      <ul class="entries">
+        {
+          work.map((job) => (
+            <li>
+              <div class="entry-head">
+                <h3>
+                  {job.role}
+                  {job.org && <span class="org">, {job.org}</span>}
+                </h3>
+                <span class="period muted">{job.period}</span>
+              </div>
+              {job.text.map((paragraph) => <p>{paragraph}</p>)}
+            </li>
+          ))
+        }
+      </ul>
+    </Section>
+
+    <Section id="projects" title="Projects">
+      {
+        renderedProjects.map(({ data, Content }) => (
+          <article class="project">
+            <figure>
+              <Image
+                src={data.image}
+                alt={data.imageAlt}
+                width={1920}
+                widths={[640, 960, 1280, 1920]}
+                sizes="(min-width: 52rem) 40rem, calc(100vw - 2.5rem)"
+              />
+              {data.imageCaption && <figcaption class="muted">{data.imageCaption}</figcaption>}
+            </figure>
+            <h3>{data.title}</h3>
+            <div class="project-text">
+              <Content />
+            </div>
+            {data.note && <p class="note">{data.note}</p>}
+            <p class="stack muted">{data.stack.join(' · ')}</p>
+            <ul class="links">
+              {data.links.map((link) => <li><a href={link.url}>{link.label}</a></li>)}
+            </ul>
+          </article>
+        ))
+      }
+    </Section>
+
+    <Section id="skills" title="Skills">
+      <dl class="skills">
+        {
+          skills.map((group) => (
+            <div>
+              <dt>{group.area}</dt>
+              <dd>{group.items.join(', ')}</dd>
+            </div>
+          ))
+        }
+      </dl>
+    </Section>
+
+    <Section id="education" title="Education">
+      <ul class="entries">
+        {
+          education.map((entry) => (
+            <li>
+              <div class="entry-head">
+                <h3>
+                  {entry.degree}
+                  <span class="org">, {entry.school}</span>
+                </h3>
+                <span class="period muted">{entry.year}</span>
+              </div>
+              <p>{entry.detail}</p>
+              <p class="thesis">
+                Thesis: <cite lang={entry.thesis.lang}>{entry.thesis.title}</cite>
+                <span class="thesis-links">
+                  {entry.thesis.links.map((link) => <a href={link.url}>{link.label}</a>)}
+                </span>
+              </p>
+            </li>
+          ))
+        }
+      </ul>
+    </Section>
+
+    <Section id="outside-work" title="Outside work">
+      <div class="outside">
+        <Image
+          src={aboutPhoto}
+          alt={`${profile.name} sitting on a rock by a lake in evening sun, with forest on the far shore`}
+          width={720}
+          widths={[240, 480, 720]}
+          sizes="12rem"
+        />
+        <p>{outsideWork}</p>
+      </div>
+    </Section>
+  </main>
+
+  <footer class="muted">
+    <p>© {year} {profile.name} · <a href="https://github.com/pouju/pouju.github.io">Source code</a></p>
+  </footer>
+</Base>
+
+<style>
+  main,
+  footer {
+    max-width: calc(var(--label) + 2rem + var(--measure));
+    margin-inline: auto;
+    padding-inline: 1.25rem;
+  }
+
+  .intro {
+    display: grid;
+    gap: 1.5rem;
+    padding-block: 4rem 3rem;
+  }
+
+  .portrait {
+    width: 8rem;
+    aspect-ratio: 1;
+    object-fit: cover;
+    object-position: 50% 30%;
+    border-radius: 50%;
+  }
+
+  h1 {
+    font-size: clamp(2.25rem, 6vw, 3rem);
+  }
+
+  .title {
+    font-size: 1.25rem;
+    color: var(--muted);
+    margin-top: 0.25rem;
+  }
+
+  .intro-text {
+    margin-top: 1.25rem;
+    max-width: var(--measure);
+  }
+
+  @media (min-width: 52rem) {
+    .intro {
+      grid-template-columns: var(--label) minmax(0, var(--measure));
+      column-gap: 2rem;
+      padding-block: 6rem 4rem;
+    }
+
+    .portrait {
+      width: 10rem;
+    }
+  }
+
+  .links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.5rem;
+    margin-top: 1.25rem;
+    font-weight: 600;
+  }
+
+  h3 {
+    font-size: 1.125rem;
+  }
+
+  .org {
+    font-weight: 400;
+  }
+
+  .entries {
+    display: grid;
+    gap: 1.75rem;
+  }
+
+  .entry-head {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 0 1rem;
+    margin-bottom: 0.4rem;
+  }
+
+  .entry-head:last-child {
+    margin-bottom: 0;
+  }
+
+  .period {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .project figure {
+    margin: 0 0 1.5rem;
+  }
+
+  .project figure img {
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+  }
+
+  figcaption {
+    font-size: 0.875rem;
+    margin-top: 0.5rem;
+  }
+
+  .project h3 {
+    font-size: 1.375rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .project-text :global(p + p) {
+    margin-top: 0.75em;
+  }
+
+  .note {
+    margin-top: 0.75em;
+    font-style: italic;
+    font-family: var(--font-serif);
+  }
+
+  .stack {
+    margin-top: 1rem;
+    font-size: 0.9375rem;
+  }
+
+  .project .links {
+    margin-top: 0.5rem;
+  }
+
+  .skills {
+    margin: 0;
+    display: grid;
+    gap: 0.6rem;
+  }
+
+  .skills div {
+    display: grid;
+    gap: 0 1rem;
+  }
+
+  .skills dt {
+    font-weight: 600;
+  }
+
+  .skills dd {
+    margin: 0;
+  }
+
+  @media (min-width: 36rem) {
+    .skills div {
+      grid-template-columns: 12rem 1fr;
+    }
+  }
+
+  .thesis {
+    margin-top: 0.4rem;
+  }
+
+  cite {
+    font-family: var(--font-serif);
+  }
+
+  .thesis-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 1.5rem;
+    margin-top: 0.25rem;
+    font-weight: 600;
+  }
+
+  .outside {
+    display: grid;
+    gap: 1.25rem;
+    align-items: start;
+  }
+
+  .outside img {
+    width: 12rem;
+    border-radius: 6px;
+  }
+
+  @media (min-width: 36rem) {
+    .outside {
+      grid-template-columns: 12rem 1fr;
+    }
+  }
+
+  footer {
+    border-top: 1px solid var(--rule);
+    padding-block: 2rem 3rem;
+    font-size: 0.9375rem;
+  }
+</style>
